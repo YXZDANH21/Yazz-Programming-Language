@@ -40,11 +40,11 @@ class Scanner {
         this.source = source;
     }
 
-    public List<Token> scanTokens() {
+    List<Token> scanTokens() {
         while (!isAtEnd()) {
             // we are at the beginning of the nex lexeme
             start = current;
-            scanTokens();
+            scanToken();
         }
         tokens.add(new Token(EOF, "", null, line));
         return tokens;
@@ -100,7 +100,7 @@ class Scanner {
                 } else if (isAlpha(c)) {
                     identifier();
                 } else {
-                    Lox.error(line, "Unexpected character.");
+                    Yazz.error(line, "Unexpected character.");
                 }
                 break;
         }
@@ -141,7 +141,7 @@ class Scanner {
             advance();
         }
         if  (isAtEnd()) {
-            Lox.error(line, "Unterminated string");
+            Yazz.error(line, "Unterminated string");
             return;
         }
         // The closing ".

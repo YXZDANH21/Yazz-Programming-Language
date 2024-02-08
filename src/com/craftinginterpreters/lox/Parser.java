@@ -18,7 +18,7 @@ class Parser {
     List<Stmt> parse()    {
         List<Stmt> statements = new ArrayList<>();
         while   (!isAtEnd())    {
-            statements.add(declaration());
+            statements.add(declaration()); // Do I change this from statement?
         }
         return statements;
     }
@@ -57,7 +57,7 @@ class Parser {
 
     private Stmt printStatement()   {
         Expr value = expression();
-        consume(SEMICOLON, "Except ';' after value.");
+        consume(SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
     }
 

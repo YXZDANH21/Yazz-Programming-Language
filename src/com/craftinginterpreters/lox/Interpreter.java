@@ -116,6 +116,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
     }
 
     @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        return null;
+    }
+
+    @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
@@ -139,7 +144,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             case PLUS:
                 if (left instanceof Double && right instanceof Double)  {
                     return (double)left + (double)right;
-            }
+                }
                 if (left instanceof String && right instanceof String)  {
                     return (String)left + (String)right;
                 }
@@ -161,4 +166,3 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
     }
 
 }
-

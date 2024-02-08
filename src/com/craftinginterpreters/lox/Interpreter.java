@@ -16,9 +16,21 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         }
     }
 
+
     @Override
     public Object visitLiteralExpr(Expr.Literal expr)   {
         return expr.value;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr) {
+        Object left = evaluate(expr.left);
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) return left;
+        } else {
+            if (!isTruthy(left)) return left;
+        }
+        return evaluate(expr.right);
     }
 
     @Override
@@ -36,6 +48,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         // Unreachable
         return null;
     }
+
 
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
@@ -92,11 +105,51 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         stmt.accept(this);
     }
 
+    void executeBlock(List<Stmt> statements, Environment enviroment)    {
+        Environment previous = this.environment;
+        try {
+            this.environment = enviroment;
+
+            for (Stmt statement : statements)   {
+                execute(statement);
+            }
+        } finally   {
+            this.environment = previous;
+        }
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt)   {
         evaluate(stmt.expression);
         return null;
     }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        return null;
+    }
+
+
+
+    /*
+    @Override
+    public Void visitIfStmt(Stmt.If stmt)   {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+     */
+
 
     @Override
     public Void visitPrintStmt(Stmt.Print stmt) {
@@ -114,6 +167,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         environment.define(stmt.name.lexeme, value);
         return null;
     }
+
 
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {

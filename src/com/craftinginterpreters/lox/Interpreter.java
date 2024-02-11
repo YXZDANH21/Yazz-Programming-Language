@@ -105,10 +105,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         stmt.accept(this);
     }
 
-    void executeBlock(List<Stmt> statements, Environment enviroment)    {
+    void executeBlock(List<Stmt> statements, Environment environment)    {
         Environment previous = this.environment;
         try {
-            this.environment = enviroment;
+            this.environment = environment;
 
             for (Stmt statement : statements)   {
                 execute(statement);

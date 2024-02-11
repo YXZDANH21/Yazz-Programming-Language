@@ -149,7 +149,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt)   {
-        YazzFunction function = new YazzFunction(stmt);
+        YazzFunction function = new YazzFunction(stmt, environment);
         environment.define(stmt.name.lexeme, function);
         return null;
     }

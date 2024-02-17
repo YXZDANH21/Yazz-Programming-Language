@@ -8,10 +8,21 @@ import java.util.Stack;
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    private FunctionType currentFunction = FunctionType.NONE;
 
     Resolver(Interpreter interpreter)   {
         this.interpreter = interpreter;
     }
+
+    private enum FunctionType   {
+        NONE, FUNCTION, INITIALIZER, METHOD
+    }
+
+    private enum ClassType  {
+        NONE, CLASS, SUBCLASS
+    }
+
+    private ClassType currentClass = ClassType.NONE;
 
     void resolve(List<Stmt> statements) {
         for (Stmt statement : statements) {
@@ -19,7 +30,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
         }
     }
 
-    private void resolveFunction(Stmt.Function function)    {
+    private void resolveFunction(Stmt.Function function, FunctionType type)    {
+        FunctionType enclosingFunction = currentFunction;
+        currentFunction = type;
         beginScope();
         for (Token param : function.params) {
             declare(param);
@@ -27,6 +40,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
         }
         resolve(function.body);
         endScope();
+        currentFunction = enclosingFunction;
+
     }
 
 
@@ -42,6 +57,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
         if (scopes.isEmpty())   return;
 
         Map<String, Boolean> scope = scopes.peek();
+        if (scope.containsKey(name.lexeme)) {
+            Yazz.error(name, "Already variable with this name in this scope.");
+        }
         scope.put(name.lexeme, false);
     }
 
@@ -68,6 +86,45 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
+        declare(stmt.name);
+        define(stmt.name);
+
+        if (stmt.superclass != null && stmt.name.lexeme.equals(stmt.superclass.name.lexeme))    {
+            Yazz.error(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass != null)    {
+            currentClass = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass != null)    {
+            beginScope();
+            scopes.peek().put("super", true);
+        }
+
+        beginScope();
+        scopes.peek().put("this", true);
+
+        for (Stmt.Function method : stmt.methods)   {
+            FunctionType declaration = FunctionType.METHOD;
+            if (method.name.lexeme.equals("init"))  {
+                declaration = FunctionType.INITIALIZER;
+            }
+            resolveFunction(method, declaration);
+        }
+
+        endScope();
+        if (stmt.superclass != null)    endScope();
+        currentClass = enclosingClass;
+        return null;
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt)   {
         resolve(stmt.expression);
         return null;
@@ -78,7 +135,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
         declare(stmt.name);
         define(stmt.name);
 
-        resolveFunction(stmt);
+        resolveFunction(stmt, FunctionType.FUNCTION);
         return null;
     }
 
@@ -98,7 +155,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
 
     @Override
     public Void visitReturnStmt(Stmt.Return stmt)   {
+        if (currentFunction == FunctionType.NONE)   {
+            Yazz.error(stmt.keyword, "Can't return from top-level code.");
+        }
+
         if (stmt.value != null) {
+            if (currentFunction == FunctionType.INITIALIZER)    {
+                Yazz.error(stmt.keyword, "Can't return a value from an initializer");
+            }
             resolve(stmt.value);
         }
         return null;
@@ -156,6 +220,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
     }
 
     @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
     public Void visitGroupingExpr(Expr.Grouping expr)   {
         resolve(expr.expression);
         return null;
@@ -170,6 +240,35 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>   {
     public Void visitLogicalExpr(Expr.Logical expr) {
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) {
+        resolve(expr.value);
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Expr.Super expr) {
+        if (currentClass == ClassType.NONE) {
+            Yazz.error(expr.keyword, "Can't use 'super' outside fo a class.");
+        } else if (currentClass != ClassType.SUBCLASS)  {
+            Yazz.error(expr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr)   {
+        if (currentClass == ClassType.NONE) {
+            Yazz.error(expr.keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+        resolveLocal(expr, expr.keyword);
         return null;
     }
 

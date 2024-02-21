@@ -8,6 +8,8 @@ import java.util.Map;
 import static com.craftinginterpreters.lox.TokenType.*;
 
 class Scanner {
+    private final String source;
+    private final List<Token> tokens = new ArrayList<>();
 
     private static final Map<String, TokenType> keywords;
     static  {
@@ -30,8 +32,6 @@ class Scanner {
         keywords.put("while", WHILE);
     }
 
-    private final String source;
-    private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -77,7 +77,7 @@ class Scanner {
             case '/':
                 if  (match('/'))    {
                     // A comment goes until the end of the line.
-                    while (peek() != '\n' && isAtEnd()) advance();
+                    while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(SLASH);
                 }

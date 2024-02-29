@@ -1,5 +1,12 @@
 package com.craftinginterpreters.lox;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +29,105 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return (double)System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("input", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                    return reader.readLine();
+                } catch (IOException e) {
+                    throw new RuntimeError(null, "Error reading input from user.");
+                }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+
+        });
+
+        globals.define("readFile", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                try {
+                    String path = arguments.get(0).toString();
+                    String contents = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+                    return contents;
+                } catch (IOException e) {
+                    throw new RuntimeError(null, "Failed to read file: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("writeFile", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                try {
+                    String path = arguments.get(0).toString();
+                    String contents = arguments.get(1).toString();
+                    Files.write(Paths.get(path), contents.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                    return null;
+                } catch (IOException e) {
+                    throw new RuntimeError(null, "Failed to write to file: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("appendFile", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                try {
+                    String path = arguments.get(0).toString();
+                    String content = arguments.get(1).toString();
+                    Files.write(Paths.get(path), content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    return null;
+                } catch (IOException e) {
+                    throw new RuntimeError(null, "Failed to append to file: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
             }
         });
     }
@@ -250,6 +356,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         System.out.println(stringify(value));
         return null;
     }
+
 
     @Override
     public Void visitReturnStmt(Stmt.Return stmt)   {

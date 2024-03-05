@@ -27,7 +27,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             }
 
             @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
                 return (double)System.currentTimeMillis() / 1000.0;
             }
 
@@ -44,12 +44,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             }
 
             @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
                 try {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                     return reader.readLine();
                 } catch (IOException e) {
-                    throw new RuntimeError(null, "Error reading input from user.");
+                    throw new RuntimeError(token, "Error reading input from user.");
                 }
             }
 
@@ -67,13 +67,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             }
 
             @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
                 try {
                     String path = arguments.get(0).toString();
                     String contents = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
                     return contents;
                 } catch (IOException e) {
-                    throw new RuntimeError(null, "Failed to read file: " + e.getMessage());
+                    throw new RuntimeError(token, "Failed to read file: " + e.getMessage());
                 }
             }
 
@@ -90,14 +90,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             }
 
             @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
                 try {
                     String path = arguments.get(0).toString();
                     String contents = arguments.get(1).toString();
                     Files.write(Paths.get(path), contents.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
                     return null;
                 } catch (IOException e) {
-                    throw new RuntimeError(null, "Failed to write to file: " + e.getMessage());
+                    throw new RuntimeError(token, "Failed to write to file: " + e.getMessage());
                 }
             }
 
@@ -114,14 +114,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
             }
 
             @Override
-            public Object call(Interpreter interpreter, List<Object> arguments) {
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
                 try {
                     String path = arguments.get(0).toString();
                     String content = arguments.get(1).toString();
                     Files.write(Paths.get(path), content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
                     return null;
                 } catch (IOException e) {
-                    throw new RuntimeError(null, "Failed to append to file: " + e.getMessage());
+                    throw new RuntimeError(token, "Failed to append to file: " + e.getMessage());
                 }
             }
 
@@ -130,6 +130,98 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
                 return "<native fn>";
             }
         });
+        globals.define("cap", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (arguments.get(0) instanceof String) {
+                    String original = (String) arguments.get(0);
+                    return original.toUpperCase();
+                } else {
+                    throw new RuntimeError(token, "Argument must be a string.");
+                }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("uncap", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (arguments.get(0) instanceof String) {
+                    String original = (String) arguments.get(0);
+                    return original.toLowerCase();
+                } else {
+                    throw new RuntimeError(token, "Argument must be a string.");
+                }
+            }
+        });
+
+        globals.define("countChars", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                try {
+                    String string = arguments.get(0).toString();
+                    return (double) string.length();
+                } catch (Exception e) {
+                    throw new RuntimeError(token, "Argument must be a string.");
+                }
+            }
+        });
+
+        globals.define("editChar", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 3;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof String)) {
+                    throw new RuntimeError(token, "First argument must be a string.");
+                }
+                if (!(arguments.get(1) instanceof Double)) {
+                    throw new RuntimeError(token, "Second argument must be a number.");
+                }
+                if (!(arguments.get(2) instanceof String)) {
+                    throw new RuntimeError(token, "Third argument must be a string.");
+                }
+
+                String originalString = (String) arguments.get(0);
+                int position = ((Double) arguments.get(1)).intValue();
+                String newCharacter = (String) arguments.get(2);
+
+                if (position < 0 || position >= originalString.length()) {
+                    throw new RuntimeError(token, "Position out of bounds.");
+                }
+
+                String newString = originalString.substring(0, position) + newCharacter + originalString.substring(position + 1);
+                return newString;
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn for editing characters in a string>";
+            }
+        });
+
     }
 
     void interpret(List<Stmt> statements) {
@@ -459,7 +551,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
         if (arguments.size() != function.arity())   {
             throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
         }
-        return function.call(this, arguments);
+        return function.call(this, arguments, expr.paren); // Added null here due to line number
     }
 
     @Override

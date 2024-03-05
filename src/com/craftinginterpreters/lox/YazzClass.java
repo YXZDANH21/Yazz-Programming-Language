@@ -31,11 +31,11 @@ class YazzClass implements YazzCallable{
     }
 
     @Override
-    public Object call(Interpreter interpreter, List<Object> arguments) {
+    public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
         YazzInstance instance = new YazzInstance(this);
         YazzFunction initializer = findMethod("init");
         if (initializer != null)    {
-            initializer.bind(instance).call(interpreter, arguments);
+            initializer.bind(instance).call(interpreter, arguments, token);
         }
         return instance;
     }

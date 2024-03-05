@@ -6,6 +6,7 @@ class AstPrinter implements Expr.Visitor<String>    {
         return expr.accept(this);
     }
 
+
     @Override
     public String visitAssignExpr(Expr.Assign expr) {
         return null;
@@ -38,6 +39,7 @@ class AstPrinter implements Expr.Visitor<String>    {
         }
         return expr.value.toString();
     }
+
 
     @Override
     public String visitLogicalExpr(Expr.Logical expr) {

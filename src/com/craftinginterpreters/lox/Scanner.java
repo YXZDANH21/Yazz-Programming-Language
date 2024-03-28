@@ -56,8 +56,6 @@ class Scanner {
             case ')': addToken(RIGHT_PAREN); break;
             case '{': addToken(LEFT_BRACE); break;
             case '}': addToken(RIGHT_BRACE); break;
-            case '[': addToken(LEFT_SB); break;
-            case ']': addToken(RIGHT_SB); break;
             case ',': addToken(COMMA); break;
             case '.': addToken(DOT); break;
             case '-': addToken(MINUS); break;
@@ -68,7 +66,7 @@ class Scanner {
                 addToken(match('=') ? BANG_EQUAL : BANG);
                 break;
             case '=':
-                addToken(match('=') ? BANG_EQUAL : EQUAL);
+                addToken(match('=') ? EQUAL_EQUAL : EQUAL);
                 break;
             case '<':
                 addToken(match('=') ? LESS_EQUAL : LESS);
@@ -77,9 +75,18 @@ class Scanner {
                 addToken(match('=') ? GREATER_EQUAL : GREATER);
                 break;
             case '/':
-                if  (match('/'))    {
+                if  (match('/')) {
                     // A comment goes until the end of the line.
                     while (peek() != '\n' && !isAtEnd()) advance();
+                } else if (match('*')) {    // To implement multiline comments
+                    while   (!isAtEnd() && !(peek() == '*' && peekNext() == '/'))   {
+                        if (peek() == '\n') line++;
+                        advance();
+                }
+                if (!isAtEnd()) {
+                    advance();
+                    advance();
+                }
                 } else {
                     addToken(SLASH);
                 }

@@ -1,0 +1,11 @@
+//var path = "/Users/yxzdan/Documents/UNI/EE475/Code/Project/tests/readFile.txt";
+// var context = readFile(path);
+// print context;
+var path = "/Users/yxzdan/Documents/UNI/EE475/Code/Project/tests/writeFile.txt";
+//writeFile(path, " The following text is appended.");
+appendFile(path, " This text is appended.");
+
+
+
+
+

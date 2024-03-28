@@ -1,0 +1,10 @@
+var string1 = "Hello world!";
+var string2 = "CAPITAL Letter 1";
+var num = 4;
+//var bool = bool;
+print cap(string1);
+print uncap(string2);
+
+// print cap(num);
+// print cap(bool)
+

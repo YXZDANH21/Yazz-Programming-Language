@@ -1,0 +1,31 @@
+class Person {
+    init(name) {
+        this.name = name;
+    }
+
+    introduce() {
+        print "My name is " + this.name + ".";
+    }
+}
+
+class Student < Person {
+    init(name, major) {
+        super.init(name);
+        this.major = major;
+    }
+
+    introduce() {
+        super.introduce();
+        print "My major is " + this.major + ".";
+    }
+}
+
+var person = Person("John");
+person.introduce();
+
+var student = Student("Luca", "Computer Science");
+student.introduce();
+
+
+
+

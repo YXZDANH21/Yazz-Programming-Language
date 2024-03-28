@@ -1,0 +1,13 @@
+// print "This line will not be printed because it is commented";
+
+/*
+    var a = "A string.";
+    var b = "Another string."
+    print a;
+    print b;
+*/
+
+print "This will print";    // This line of code is not commented out
+
+// # Error
+

@@ -1,0 +1,7 @@
+var string = "Yellow";
+string = editChar(string, 1, "M");
+var string2 = countChars(string);
+print string;
+print string2;
+
+

@@ -167,6 +167,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
                     throw new RuntimeError(token, "Argument must be a string.");
                 }
             }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
         });
 
         globals.define("countChars", new YazzCallable() {
@@ -177,12 +182,17 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
-                try {
+                if (arguments.get(0) instanceof String) {
                     String string = arguments.get(0).toString();
                     return (double) string.length();
-                } catch (Exception e) {
+                } else {
                     throw new RuntimeError(token, "Argument must be a string.");
                 }
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
             }
         });
 
@@ -205,7 +215,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
                 }
 
                 String originalString = (String) arguments.get(0);
-                int position = ((Double) arguments.get(1)).intValue();
+                int position = ((Double) arguments.get(1)).intValue() - 1;
                 String newCharacter = (String) arguments.get(2);
 
                 if (position < 0 || position >= originalString.length()) {
@@ -221,6 +231,138 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>   {
                 return "<native fn for editing characters in a string>";
             }
         });
+
+        globals.define("sqrt", new YazzCallable() {
+            @Override
+            public int arity() { return 1; }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double)) {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                Double number = (Double) arguments.get(0);
+                if (number < 0) {
+                    throw new RuntimeError(token, "Argument must be non-negative.");
+                }
+                return Math.sqrt(number);
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("pow", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double))  {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                if (!(arguments.get(1) instanceof Double))  {
+                    throw new RuntimeError(token, "The power must be a number.");
+                }
+                Double number = (Double) arguments.get(0);
+                Double power = (Double) arguments.get(1);
+                return Math.pow(number, power);
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("sin", new YazzCallable() {
+            @Override
+            public int arity() { return 1; }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double)) {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                return Math.round(Math.sin(Math.toRadians((Double) arguments.get(0))) * 10000) / 10000.0;
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+        });
+
+        globals.define("cos", new YazzCallable() {
+            @Override
+            public int arity() { return 1; }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double)) {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                return Math.round(Math.cos(Math.toRadians((Double) arguments.get(0))) * 10000) / 10000.0;
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+
+        });
+
+        globals.define("tan", new YazzCallable() {
+            @Override
+            public int arity() { return 1; }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double)) {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                double angle = Math.toRadians((Double) arguments.get(0));
+                // Check for the angle where tan is undefined
+                if (Math.abs(Math.cos(angle)) < 1E-9) {
+                    throw new RuntimeError(token, "Tangent is undefined for this angle.");
+                }
+                return Math.round(Math.tan(angle) * 10000) / 10000.0;
+            }
+
+            @Override
+            public String toString()    {
+                return "<native fn>";
+            }
+
+        });
+
+        globals.define("round", new YazzCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments, Token token) {
+                if (!(arguments.get(0) instanceof Double) || !(arguments.get(1) instanceof Double)) {
+                    throw new RuntimeError(token, "Argument must be a number.");
+                }
+                double number = (Double) arguments.get(0);
+                int places = ((Double) arguments.get(1)).intValue();
+                double scale = Math.pow(10, places);
+                return Math.round(number * scale) / scale;
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn for rounding>";
+            }
+        });
+
 
     }
 

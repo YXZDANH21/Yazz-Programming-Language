@@ -1,0 +1,16 @@
+var a = true;
+var b = true;
+if  (a == true and b == true)   {
+    print "Both variables are true";
+} else  {
+    print "At least one variable is false";
+}
+
+
+var a = !true;
+var b = !true;
+if  (a == true or b == true)   {
+    print "At least one variable is true";
+} else  {
+    print "Both variables are false";
+}

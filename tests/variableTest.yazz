@@ -1,0 +1,19 @@
+var a = true;
+var b = false;
+var c = 100;
+var d = "Testing variables";
+print a;
+print b;
+print c;
+print d;
+
+
+
+var e = "This string ";
+var f = "will update";
+
+print e + f;
+
+
+var g = 100;
+// print e + g;

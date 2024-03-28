@@ -1,0 +1,22 @@
+var calculatedValue = (10 * (4 - 2) + 8 )/ 7;
+print calculatedValue;
+
+var num = 3;
+var ans;
+var angle = 60;
+
+print ans = pow(num, 3);
+print ans = sqrt(ans);
+print round(ans, 3);
+
+print cos(angle);
+print sin(angle);
+print tan(angle);
+
+
+
+
+
+
+
+

@@ -1,0 +1,13 @@
+var a = 10;
+
+fun setNumber()   {
+    var a = 20;
+    return a;
+}
+
+fun printNumber(x)   {
+    print x;
+}
+
+var setValue = setNumber();
+printNumber(setValue);
